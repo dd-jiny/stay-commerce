@@ -3,7 +3,6 @@ package com.staycommerce.domain.member;
 import com.staycommerce.support.error.CoreException;
 import com.staycommerce.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,7 @@ import java.time.LocalDate;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public MemberInfo register(String loginId, String rawPassword, String name,
