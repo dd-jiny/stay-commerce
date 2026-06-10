@@ -1,6 +1,7 @@
 package com.staycommerce.domain.reservation;
 
 import com.staycommerce.domain.BaseEntity;
+import com.staycommerce.domain.common.PeriodPolicy;
 import com.staycommerce.support.error.CoreException;
 import com.staycommerce.support.error.ErrorType;
 import jakarta.persistence.Column;
@@ -19,8 +20,6 @@ import java.util.List;
 @Table(name = "reservation")
 public class Reservation extends BaseEntity {
 
-    private static final int MAX_NIGHTS = 30;
-    private static final int MAX_ADVANCE_DAYS = 365;
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Column(name = "member_id", nullable = false)
@@ -53,26 +52,10 @@ public class Reservation extends BaseEntity {
     /** PENDING 예약 생성. totalAmount/expiresAt 은 Facade가 계산해 주입한다. */
     public Reservation(Long memberId, Long roomTypeId, LocalDate checkIn, LocalDate checkOut,
                        int guests, int totalAmount, ZonedDateTime expiresAt) {
-        LocalDate today = LocalDate.now(KST);
         if (memberId == null || roomTypeId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "회원/객실 정보는 필수입니다.");
         }
-        if (checkIn == null || checkOut == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "체크인/체크아웃 날짜는 필수입니다.");
-        }
-        if (!checkOut.isAfter(checkIn)) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "체크아웃은 체크인 이후여야 합니다.");
-        }
-        if (checkIn.isBefore(today)) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "체크인은 오늘 이후여야 합니다.");
-        }
-        long nights = ChronoUnit.DAYS.between(checkIn, checkOut);
-        if (nights > MAX_NIGHTS) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "최대 숙박 일수(30박)를 초과했습니다.");
-        }
-        if (checkIn.isAfter(today.plusDays(MAX_ADVANCE_DAYS))) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "예약 가능 기간(1년)을 초과했습니다.");
-        }
+        PeriodPolicy.validate(checkIn, checkOut);
         if (guests < 1) {
             throw new CoreException(ErrorType.BAD_REQUEST, "투숙 인원은 1명 이상이어야 합니다.");
         }
